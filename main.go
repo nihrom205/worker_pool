@@ -9,12 +9,12 @@ type Pool struct {
 	pool chan struct{}
 }
 
-func NewPool(numberWorker int) *Pool {
+func NewPool(numberWorker int) Pool {
 	pool := make(chan struct{}, numberWorker)
 	for i := 0; i < numberWorker; i++ {
 		pool <- struct{}{}
 	}
-	return &Pool{pool: pool}
+	return Pool{pool: pool}
 }
 
 func (p *Pool) work(n int) {
