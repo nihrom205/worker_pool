@@ -5,32 +5,30 @@ import (
 	"time"
 )
 
-type Pool struct {
-	pool chan struct{}
-}
-
-func NewPool(numberWorker int) Pool {
-	pool := make(chan struct{}, numberWorker)
-	for i := 0; i < numberWorker; i++ {
-		pool <- struct{}{}
+func worker(id int, job <-chan int, result chan<- int) {
+	for j := range job {
+		fmt.Printf("worker %d start\n", id)
+		time.Sleep(1 * time.Second)
+		fmt.Printf("worker %d end\n", id)
+		result <- j * 2
 	}
-	return Pool{pool: pool}
-}
-
-func (p *Pool) work(n int) {
-	<-p.pool
-	go func() {
-		time.Sleep(2 * time.Second)
-		fmt.Println(n, "pool start")
-		p.pool <- struct{}{}
-	}()
-
 }
 
 func main() {
-	pool := NewPool(3)
-	for i := 0; i < 10; i++ {
-		pool.work(i)
+	numJobs := 5
+	jobs := make(chan int, numJobs)
+	result := make(chan int, numJobs)
+
+	for i := 0; i <= 3; i++ {
+		go worker(i, jobs, result)
 	}
-	time.Sleep(20 * time.Second)
+
+	for i := 0; i < 10; i++ {
+		jobs <- i
+	}
+	close(jobs)
+
+	for i := 0; i < 10; i++ {
+		fmt.Printf("worker %d end\n", <-result)
+	}
 }
